@@ -1,24 +1,3 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import path from "path";
+import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-export default defineConfig({
-  server: {
-    host: "::",
-    port: 8080,
-  },
-  plugins: [
-    react(),
-  ],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-      "node:async_hooks": path.resolve(__dirname, "src/lib/empty-shim.ts"),
-    },
-  },
-  build: {
-    outDir: "dist",
-    emptyOutDir: true,
-  }
-});
-// Triggering a fresh build to clear Vercel cache and use the correct plugin.
+export default defineConfig();
