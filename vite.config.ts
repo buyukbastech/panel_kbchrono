@@ -21,3 +21,4 @@ export default defineConfig({
     emptyOutDir: true,
   }
 });
+// Triggering a fresh build to clear Vercel cache and use the correct plugin.
