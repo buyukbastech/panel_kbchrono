@@ -13,6 +13,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "node:async_hooks": path.resolve(__dirname, "src/lib/empty-shim.ts"),
     },
   },
   build: {
