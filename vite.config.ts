@@ -13,4 +13,5 @@ export default defineConfig({
     }
   }
 });
+// Triggering redeploy for Vercel 404 fix
 // trigger restart
