@@ -7,11 +7,11 @@ const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 dakika
 
 // Route beforeLoad için -> render edilmeden önce oturumu kontrol eder
 export async function requireAuth() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (!user || error) {
     throw redirect({ to: "/login" });
   }
-  return { session };
+  return { user };
 }
 
 // Bileşen içi hook -> 30 dakika inaktivite sayacı

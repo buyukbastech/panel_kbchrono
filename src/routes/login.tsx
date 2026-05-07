@@ -1,10 +1,16 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { Mail, Lock, ArrowRight, ShieldCheck, AlertCircle, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/login")({
+  beforeLoad: async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      throw redirect({ to: "/" });
+    }
+  },
   component: LoginPage,
 });
 

@@ -30,8 +30,10 @@ type NavGroup = { title: string; items: NavItem[] };
 function SidebarContent({ archiveCount, onItemClick }: { archiveCount: number | null, onItemClick?: () => void }) {
   const location = useLocation();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     sessionStorage.removeItem("isAdminAuth");
+    sessionStorage.removeItem("crm_pass");
     window.location.href = "/login";
   };
 
