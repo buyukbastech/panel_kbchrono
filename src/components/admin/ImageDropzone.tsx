@@ -48,12 +48,27 @@ export function ImageDropzone({ onChange, value = [] }: ImageDropzoneProps) {
     }
 
     setIsProcessing(true);
-    toast.info("AI Vision: Görüntü arka planı temizleniyor ve hizalanıyor...", { icon: <Wand2 className="h-4 w-4 text-gold" /> });
+    const hasFirstImage = previews.length === 0;
+    
+    if (hasFirstImage) {
+      toast.info("AI Vision: Kapak fotoğrafı arka planı temizleniyor ve hizalanıyor...", { icon: <Wand2 className="h-4 w-4 text-gold" /> });
+    } else {
+      toast.info("Görseller galeriye ekleniyor...", { icon: <ImagePlus className="h-4 w-4 text-gold" /> });
+    }
 
     try {
-      // Process images sequentially or in parallel
+      // Sadece 1. görselin (Kapak / index 0) arka planını kaldır, diğerlerine dokunma
       const processedFiles = await Promise.all(
-        newFilesArray.map(f => processImageWithAIVision(f, { paddingPercent: 10, outputFormat: "image/webp" }))
+        newFilesArray.map(async (f, i) => {
+          const finalIndex = previews.length + i;
+          if (finalIndex === 0) {
+            // İlk görsel: AI arka plan silme çalışsın
+            return await processImageWithAIVision(f, { paddingPercent: 10, outputFormat: "image/webp" });
+          } else {
+            // Diğer görseller: Arka planı elleme, orijinal dosyayı koru
+            return f;
+          }
+        })
       );
 
       const nextPreviews: Preview[] = processedFiles.map((f) => ({
@@ -74,7 +89,12 @@ export function ImageDropzone({ onChange, value = [] }: ImageDropzoneProps) {
         .map(p => p.url);
         
       onChange?.(updatedFiles, existingUrls);
-      toast.success("AI Vision işlemi tamamlandı.");
+      
+      if (hasFirstImage) {
+        toast.success("Kapak fotoğrafı AI Vision ile işlendi, diğer görseller orijinal haliyle eklendi.");
+      } else {
+        toast.success("Görseller orijinal haliyle başarıyla eklendi.");
+      }
     } catch (error: any) {
       toast.error("Görüntü işlenirken bir hata oluştu.");
       console.error(error);
