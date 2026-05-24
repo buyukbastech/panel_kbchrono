@@ -64,7 +64,7 @@ export const createProductServerFn = async (input: { data: CreateProductInput })
         status: data.status,
         translations: data.translations || {},
         tagline: "Atölyemizden yeni bir başyapıt",
-        slug: data.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')
+        slug: `${data.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')}-${Math.random().toString(36).substring(2, 8)}`
       }]);
 
     if (error) throw error;
@@ -121,8 +121,7 @@ export const updateProductServerFn = async (input: { data: { id: string, data: C
         power_reserve: data.power_reserve,
         crystal: data.crystal,
         status: data.status,
-        translations: data.translations || {},
-        slug: data.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')
+        translations: data.translations || {}
       })
       .eq('id', id);
 

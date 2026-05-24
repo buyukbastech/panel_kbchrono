@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState, useEffect } from "react";
-import { ImagePlus, UploadCloud, X, Star, Cloud } from "lucide-react";
+import { ImagePlus, UploadCloud, X, Star, Cloud, Wand2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { processImageWithAIVision } from "@/lib/ai-vision";
 
 type Preview = { id: string; url: string; name: string; size: number };
 
@@ -13,6 +14,7 @@ export function ImageDropzone({ onChange, value = [] }: ImageDropzoneProps) {
   const [previews, setPreviews] = useState<Preview[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const initialized = useRef(false);
 
@@ -35,7 +37,7 @@ export function ImageDropzone({ onChange, value = [] }: ImageDropzoneProps) {
     }
   }, [value]);
 
-  const handleFiles = useCallback((incomingFiles: FileList | null) => {
+  const handleFiles = useCallback(async (incomingFiles: FileList | null) => {
     if (!incomingFiles) return;
     
     const newFilesArray = Array.from(incomingFiles).filter((f) => f.type.startsWith("image/"));
@@ -45,24 +47,40 @@ export function ImageDropzone({ onChange, value = [] }: ImageDropzoneProps) {
       return;
     }
 
-    const nextPreviews: Preview[] = newFilesArray.map((f) => ({
-      id: crypto.randomUUID(),
-      url: URL.createObjectURL(f),
-      name: f.name,
-      size: f.size,
-    }));
-    
-    const updatedPreviews = [...previews, ...nextPreviews];
-    const updatedFiles = [...files, ...newFilesArray];
-    
-    setPreviews(updatedPreviews);
-    setFiles(updatedFiles);
-    
-    const existingUrls = updatedPreviews
-      .filter(p => !p.url.startsWith('blob:'))
-      .map(p => p.url);
+    setIsProcessing(true);
+    toast.info("AI Vision: Görüntü arka planı temizleniyor ve hizalanıyor...", { icon: <Wand2 className="h-4 w-4 text-gold" /> });
+
+    try {
+      // Process images sequentially or in parallel
+      const processedFiles = await Promise.all(
+        newFilesArray.map(f => processImageWithAIVision(f, { paddingPercent: 10, outputFormat: "image/webp" }))
+      );
+
+      const nextPreviews: Preview[] = processedFiles.map((f) => ({
+        id: crypto.randomUUID(),
+        url: URL.createObjectURL(f),
+        name: f.name,
+        size: f.size,
+      }));
       
-    onChange?.(updatedFiles, existingUrls);
+      const updatedPreviews = [...previews, ...nextPreviews];
+      const updatedFiles = [...files, ...processedFiles];
+      
+      setPreviews(updatedPreviews);
+      setFiles(updatedFiles);
+      
+      const existingUrls = updatedPreviews
+        .filter(p => !p.url.startsWith('blob:'))
+        .map(p => p.url);
+        
+      onChange?.(updatedFiles, existingUrls);
+      toast.success("AI Vision işlemi tamamlandı.");
+    } catch (error: any) {
+      toast.error("Görüntü işlenirken bir hata oluştu.");
+      console.error(error);
+    } finally {
+      setIsProcessing(false);
+    }
   }, [onChange, previews, files]);
 
   const onDrop = (e: React.DragEvent) => {
@@ -136,26 +154,34 @@ export function ImageDropzone({ onChange, value = [] }: ImageDropzoneProps) {
             className={`relative mb-4 flex items-center justify-center rounded-2xl transition-all duration-300 ${
               previews.length > 0 ? "h-12 w-12" : "h-16 w-16"
             } ${
-              isDragging
+              isDragging || isProcessing
                 ? "bg-gradient-gold scale-110 rotate-3"
                 : "glass group-hover:scale-105"
             }`}
           >
-            <UploadCloud
-              className={`${previews.length > 0 ? "h-5 w-5" : "h-7 w-7"} transition-colors ${
-                isDragging ? "text-primary-foreground" : "text-gold"
-              }`}
-              strokeWidth={1.75}
-            />
-            {isDragging && (
+            {isProcessing ? (
+              <Loader2 className={`${previews.length > 0 ? "h-5 w-5" : "h-7 w-7"} animate-spin text-primary-foreground`} strokeWidth={1.75} />
+            ) : (
+              <UploadCloud
+                className={`${previews.length > 0 ? "h-5 w-5" : "h-7 w-7"} transition-colors ${
+                  isDragging ? "text-primary-foreground" : "text-gold"
+                }`}
+                strokeWidth={1.75}
+              />
+            )}
+            {(isDragging || isProcessing) && (
               <span className="absolute inset-0 rounded-2xl animate-ping bg-gold/30" />
             )}
           </div>
           <p className="font-display text-2xl font-semibold tracking-tight text-foreground">
-            {isDragging ? "Yüklemek için bırakın" : "Görsellerinizi buraya bırakın"}
+            {isProcessing ? "AI Vision İşliyor..." : isDragging ? "Yüklemek için bırakın" : "Görsellerinizi buraya bırakın"}
           </p>
           <div className="mt-2 text-sm text-muted-foreground">
-            {previews.length > 0 ? (
+            {isProcessing ? (
+              <span className="text-gold font-medium flex items-center justify-center gap-2">
+                <Wand2 className="h-4 w-4 animate-pulse" /> Akıllı arka plan silme devrede
+              </span>
+            ) : previews.length > 0 ? (
               <span className="text-emerald-400 font-medium">+{previews.length} görsel eklendi</span>
             ) : (
               <>

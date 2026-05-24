@@ -129,12 +129,14 @@ function ProductCard({
 }) {
   return (
     <div className="flex items-start gap-3 p-4 border-b border-border/40 last:border-0 hover:bg-surface/40 transition-colors">
-      {/* Image */}
-      <div className="h-14 w-14 rounded-xl border border-gold/20 overflow-hidden bg-surface-elevated shrink-0">
+      {/* Image - Transparan & Havada Süzülen Efekt */}
+      <div className="h-14 w-14 rounded-xl border border-gold/20 overflow-hidden bg-transparent shrink-0 flex items-center justify-center relative group-hover:scale-110 transition-transform duration-500">
+        <div className="absolute inset-0 bg-gold/5 blur-xl rounded-full opacity-50" />
         <img
           src={product.image || "https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&q=80&w=100&h=100"}
           alt={product.name}
-          className="h-full w-full object-cover"
+          className="h-[120%] w-[120%] object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)]"
+          style={{ imageRendering: "auto", filter: "contrast(1.05) saturate(1.05)" }}
         />
       </div>
 
@@ -151,7 +153,13 @@ function ProductCard({
         <div className="flex items-center justify-between mt-2.5">
           <div>
             <p className="text-[11px] text-muted-foreground/70">{product.collection}</p>
-            <p className="text-[13px] font-semibold text-foreground mt-0.5">{product.price}</p>
+            <p className="text-[13px] font-semibold text-foreground mt-0.5">
+              {product.price ? (() => {
+                const clean = product.price.replace(/[₺$\s.]/g, '');
+                const formatted = clean.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                return `$ ${formatted}`;
+              })() : ''}
+            </p>
           </div>
           <ActionButtons
             product={product}
@@ -296,11 +304,14 @@ export function ProductList({
             {products.map((product: any) => (
               <TableRow key={product.id} className="group hover:bg-surface/60 border-border/40 transition-colors">
                 <TableCell className="py-4 pl-6">
-                  <div className="h-12 w-12 rounded-xl border border-gold/20 overflow-hidden bg-surface-elevated">
+                  {/* Image - Transparan & Havada Süzülen Efekt */}
+                  <div className="h-14 w-14 rounded-xl border border-gold/20 overflow-hidden bg-transparent flex items-center justify-center relative group-hover:scale-110 transition-transform duration-500">
+                    <div className="absolute inset-0 bg-gold/5 blur-xl rounded-full opacity-50" />
                     <img
                       src={product.image || "https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&q=80&w=100&h=100"}
                       alt={product.name}
-                      className="h-full w-full object-cover"
+                      className="h-[120%] w-[120%] object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)]"
+                      style={{ imageRendering: "auto", filter: "contrast(1.05) saturate(1.05)" }}
                     />
                   </div>
                 </TableCell>
@@ -315,7 +326,13 @@ export function ProductList({
                 </TableCell>
                 <TableCell className="py-4 text-[13px] text-muted-foreground">{product.collection}</TableCell>
                 <TableCell className="py-4"><StatusBadge status={product.status} /></TableCell>
-                <TableCell className="py-4 text-[13px] font-medium text-foreground">{product.price}</TableCell>
+                <TableCell className="py-4 text-[13px] font-medium text-foreground">
+                  {product.price ? (() => {
+                    const clean = product.price.replace(/[₺$\s.]/g, '');
+                    const formatted = clean.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                    return `$ ${formatted}`;
+                  })() : ''}
+                </TableCell>
                 <TableCell className="py-4 text-right pr-6">
                   {/* Desktop: show on hover */}
                   <div className="flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity">

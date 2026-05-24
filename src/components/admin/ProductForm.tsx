@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Hash, Tag, Watch, Image as ImageIcon, Save, Send, AlignLeft, Loader2, Settings, Languages } from "lucide-react";
+import { Hash, Tag, Watch, Image as ImageIcon, Save, Send, AlignLeft, Loader2, Settings, Languages, SlidersHorizontal } from "lucide-react";
 import { createProductServerFn, updateProductServerFn } from "@/lib/products-server";
 import { uploadProductImage } from "@/lib/storage";
 import { toast } from "sonner";
@@ -13,11 +13,13 @@ import {
 } from "@/components/ui/select";
 
 const collections = [
-  "Heritage Chronograph",
-  "Marine Perpetual",
-  "Lunaire Tourbillon",
-  "Aeon Skeleton",
-  "Noir Limited Edition",
+  "Richard Mille",
+  "Audemars Piguet",
+  "Rolex",
+  "Patek Philippe",
+  "Cartier",
+  "Jaeger LeCoultre",
+  "Omega",
 ];
 
 const languages = [
@@ -88,6 +90,14 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     translations: initialData?.translations || {
       en: {},
       ar: {}
+    },
+    metadata: {
+      model: initialData?.translations?.metadata?.model || "",
+      concept: initialData?.translations?.metadata?.concept || "",
+      range: initialData?.translations?.metadata?.range || "",
+      type: initialData?.translations?.metadata?.type || "",
+      material: initialData?.translations?.metadata?.material || "",
+      color: initialData?.translations?.metadata?.color || "",
     }
   });
 
@@ -200,6 +210,11 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
       }
 
       // 3. Submit to server
+      finalTranslations = {
+        ...finalTranslations,
+        metadata: formData.metadata
+      };
+
       let result;
       if (initialData?.id) {
         result = await updateProductServerFn({
@@ -349,18 +364,18 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">
               <Tag className="h-3 w-3 text-gold" strokeWidth={2} />
-              Fiyat
+              Fiyat (USD)
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gold font-bold text-sm select-none">₺</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gold font-bold text-sm select-none">$</span>
               <input
                 type="text"
                 inputMode="numeric"
-                value={formData.price ? formData.price.replace(/[₺.]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.') : ''}
+                value={formData.price ? formData.price.replace(/[₺$. ]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.') : ''}
                 onChange={(e) => {
                   const raw = e.target.value.replace(/\./g, '').replace(/[^0-9]/g, '');
                   const formatted = raw.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-                  setFormData({ ...formData, price: `₺${formatted}` });
+                  setFormData({ ...formData, price: `$${formatted}` });
                 }}
                 className="w-full rounded-xl border border-border bg-input/60 pl-8 pr-4 py-3.5 text-sm text-foreground focus:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/20 focus:bg-input transition-all"
                 placeholder="48.500"
@@ -428,13 +443,164 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         </div>
       </section>
 
-      {/* Section: Technical specifications */}
+      {/* Section: Filtering & Classification */}
       <section 
         className="rounded-2xl glass shadow-soft animate-fade-up"
         style={{ animationDelay: "50ms" }}
       >
         <SectionHeader
           step="Adım 02"
+          title="Filtreleme & Sınıflandırma"
+          hint="Vitrinde arama ve filtreleme için kullanılır"
+          icon={SlidersHorizontal}
+        />
+
+        <div className="grid gap-5 sm:gap-6 px-4 sm:px-7 py-6 sm:py-7 md:grid-cols-2 lg:grid-cols-3">
+          {/* Model */}
+          <div className="space-y-2">
+            <label className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">Model</label>
+            <input
+              type="text"
+              value={formData.metadata.model}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                metadata: { ...formData.metadata, model: e.target.value } 
+              })}
+              className="w-full rounded-xl border border-border bg-input/60 px-4 py-3 text-sm text-foreground focus:border-gold/60 focus:outline-none transition-all"
+              placeholder="ör. Royal Oak, RM 67-02"
+              disabled={isSubmitting}
+            />
+          </div>
+
+          {/* Concept */}
+          <div className="space-y-2">
+            <label className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">Concept</label>
+            <Select
+              value={formData.metadata.concept}
+              onValueChange={(val) => setFormData({ 
+                ...formData, 
+                metadata: { ...formData.metadata, concept: val } 
+              })}
+              disabled={isSubmitting}
+            >
+              <SelectTrigger className="w-full rounded-xl border border-border bg-input/60 px-4 py-3 h-auto text-sm text-foreground focus:ring-2 focus:ring-gold/20 focus:border-gold/60 transition-all">
+                <SelectValue placeholder="Konsept seçin…" />
+              </SelectTrigger>
+              <SelectContent className="bg-surface-elevated/95 backdrop-blur-xl border-border/40 text-foreground">
+                {["Lifestyle", "Sports", "Aviation"].map((item) => (
+                  <SelectItem key={item} value={item} className="focus:bg-gold/10 focus:text-gold transition-colors cursor-pointer py-2.5">
+                    {item}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Range */}
+          <div className="space-y-2">
+            <label className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">Range</label>
+            <Select
+              value={formData.metadata.range}
+              onValueChange={(val) => setFormData({ 
+                ...formData, 
+                metadata: { ...formData.metadata, range: val } 
+              })}
+              disabled={isSubmitting}
+            >
+              <SelectTrigger className="w-full rounded-xl border border-border bg-input/60 px-4 py-3 h-auto text-sm text-foreground focus:ring-2 focus:ring-gold/20 focus:border-gold/60 transition-all">
+                <SelectValue placeholder="Cinsiyet seçin…" />
+              </SelectTrigger>
+              <SelectContent className="bg-surface-elevated/95 backdrop-blur-xl border-border/40 text-foreground">
+                {["Erkek", "Kadın", "Unisex"].map((item) => (
+                  <SelectItem key={item} value={item} className="focus:bg-gold/10 focus:text-gold transition-colors cursor-pointer py-2.5">
+                    {item}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Type */}
+          <div className="space-y-2">
+            <label className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">Type</label>
+            <Select
+              value={formData.metadata.type}
+              onValueChange={(val) => setFormData({ 
+                ...formData, 
+                metadata: { ...formData.metadata, type: val } 
+              })}
+              disabled={isSubmitting}
+            >
+              <SelectTrigger className="w-full rounded-xl border border-border bg-input/60 px-4 py-3 h-auto text-sm text-foreground focus:ring-2 focus:ring-gold/20 focus:border-gold/60 transition-all">
+                <SelectValue placeholder="Tip seçin…" />
+              </SelectTrigger>
+              <SelectContent className="bg-surface-elevated/95 backdrop-blur-xl border-border/40 text-foreground">
+                {["Automatic", "Manual Winding", "Chronograph"].map((item) => (
+                  <SelectItem key={item} value={item} className="focus:bg-gold/10 focus:text-gold transition-colors cursor-pointer py-2.5">
+                    {item}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Material */}
+          <div className="space-y-2">
+            <label className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">Material</label>
+            <Select
+              value={formData.metadata.material}
+              onValueChange={(val) => setFormData({ 
+                ...formData, 
+                metadata: { ...formData.metadata, material: val } 
+              })}
+              disabled={isSubmitting}
+            >
+              <SelectTrigger className="w-full rounded-xl border border-border bg-input/60 px-4 py-3 h-auto text-sm text-foreground focus:ring-2 focus:ring-gold/20 focus:border-gold/60 transition-all">
+                <SelectValue placeholder="Materyal seçin…" />
+              </SelectTrigger>
+              <SelectContent className="bg-surface-elevated/95 backdrop-blur-xl border-border/40 text-foreground">
+                {["Carbon", "Ceramic", "Rose Gold", "Titanium", "White Gold", "Yellow Gold", "Steel"].map((item) => (
+                  <SelectItem key={item} value={item} className="focus:bg-gold/10 focus:text-gold transition-colors cursor-pointer py-2.5">
+                    {item}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Color */}
+          <div className="space-y-2">
+            <label className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">Color</label>
+            <Select
+              value={formData.metadata.color}
+              onValueChange={(val) => setFormData({ 
+                ...formData, 
+                metadata: { ...formData.metadata, color: val } 
+              })}
+              disabled={isSubmitting}
+            >
+              <SelectTrigger className="w-full rounded-xl border border-border bg-input/60 px-4 py-3 h-auto text-sm text-foreground focus:ring-2 focus:ring-gold/20 focus:border-gold/60 transition-all">
+                <SelectValue placeholder="Renk seçin…" />
+              </SelectTrigger>
+              <SelectContent className="bg-surface-elevated/95 backdrop-blur-xl border-border/40 text-foreground">
+                {["Black", "Blue", "Gold", "Green", "Grey", "Orange", "Red", "White", "Skeleton"].map((item) => (
+                  <SelectItem key={item} value={item} className="focus:bg-gold/10 focus:text-gold transition-colors cursor-pointer py-2.5">
+                    {item}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </section>
+
+      {/* Section: Technical specifications */}
+      <section 
+        className="rounded-2xl glass shadow-soft animate-fade-up"
+        style={{ animationDelay: "80ms" }}
+      >
+        <SectionHeader
+          step="Adım 03"
           title="Teknik Özellikler"
           hint="Mühendislik detayları"
           icon={Settings}
@@ -532,7 +698,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         style={{ animationDelay: "100ms" }}
       >
         <SectionHeader
-          step="Adım 03"
+          step="Adım 04"
           title="Görseller"
           hint="İlk görsel kapak fotoğrafı olur"
           icon={ImageIcon}
