@@ -20,6 +20,10 @@ const collections = [
   "Cartier",
   "Jaeger LeCoultre",
   "Omega",
+  "F.P Journe",
+  "Hublot",
+  "Frank Muller",
+  "IWC",
 ];
 
 const languages = [
