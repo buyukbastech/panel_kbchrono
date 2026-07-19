@@ -24,6 +24,10 @@ const collections = [
   "Hublot",
   "Frank Muller",
   "IWC",
+  "Rare Bags",
+  "Jewellery",
+  "Personalization",
+  "Old Money",
 ];
 
 const languages = [
@@ -104,6 +108,8 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
       color: initialData?.translations?.metadata?.color || "",
     }
   });
+
+  const isWatchCollection = !["Rare Bags", "Jewellery", "Personalization", "Old Money"].includes(formData.collection);
 
   // --- Auto Translation ---
   const translateText = async (text: string, targetLang: string): Promise<string> => {
@@ -345,24 +351,26 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
           </div>
 
           {/* Serial */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">
-              <Hash className="h-3 w-3 text-gold" strokeWidth={2} />
-              Seri Numarası
-            </label>
-            <input
-              type="text"
-              value={formData.sku}
-              onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-              className="w-full rounded-xl border border-border bg-input/60 px-4 py-3.5 font-mono text-sm text-foreground tracking-wider focus:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/20 focus:bg-input transition-all"
-              placeholder="MH-XXXX-####"
-              disabled={isSubmitting}
-            />
-            <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-              <span className="h-1 w-1 rounded-full bg-gold/60" />
-              Kasa arkasına kazınmış benzersiz referans
-            </p>
-          </div>
+          {isWatchCollection && (
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">
+                <Hash className="h-3 w-3 text-gold" strokeWidth={2} />
+                Seri Numarası
+              </label>
+              <input
+                type="text"
+                value={formData.sku}
+                onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                className="w-full rounded-xl border border-border bg-input/60 px-4 py-3.5 font-mono text-sm text-foreground tracking-wider focus:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/20 focus:bg-input transition-all"
+                placeholder="MH-XXXX-####"
+                disabled={isSubmitting}
+              />
+              <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                <span className="h-1 w-1 rounded-full bg-gold/60" />
+                Kasa arkasına kazınmış benzersiz referans
+              </p>
+            </div>
+          )}
 
           {/* Price */}
           <div className="space-y-2">
@@ -448,11 +456,12 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
       </section>
 
       {/* Section: Filtering & Classification */}
-      <section 
-        className="rounded-2xl glass shadow-soft animate-fade-up"
-        style={{ animationDelay: "50ms" }}
-      >
-        <SectionHeader
+      {isWatchCollection && (
+        <section 
+          className="rounded-2xl glass shadow-soft animate-fade-up"
+          style={{ animationDelay: "50ms" }}
+        >
+          <SectionHeader
           step="Adım 02"
           title="Filtreleme & Sınıflandırma"
           hint="Vitrinde arama ve filtreleme için kullanılır"
@@ -597,13 +606,15 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
           </div>
         </div>
       </section>
+      )}
 
       {/* Section: Technical specifications */}
-      <section 
-        className="rounded-2xl glass shadow-soft animate-fade-up"
-        style={{ animationDelay: "80ms" }}
-      >
-        <SectionHeader
+      {isWatchCollection && (
+        <section 
+          className="rounded-2xl glass shadow-soft animate-fade-up"
+          style={{ animationDelay: "80ms" }}
+        >
+          <SectionHeader
           step="Adım 03"
           title="Teknik Özellikler"
           hint="Mühendislik detayları"
@@ -695,6 +706,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
           </div>
         </div>
       </section>
+      )}
 
       {/* Section: Imagery */}
       <section
@@ -702,7 +714,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         style={{ animationDelay: "100ms" }}
       >
         <SectionHeader
-          step="Adım 04"
+          step={isWatchCollection ? "Adım 04" : "Adım 02"}
           title="Görseller"
           hint="İlk görsel kapak fotoğrafı olur"
           icon={ImageIcon}
