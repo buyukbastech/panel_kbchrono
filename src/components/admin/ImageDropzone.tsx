@@ -24,8 +24,8 @@ export function ImageDropzone({ onChange, value = [] }: ImageDropzoneProps) {
     if (value && value.length > 0 && !initialized.current) {
       initialized.current = true;
       
-      // Tekilleştirme ve Sınırlandırma: Aynı URL'leri temizle ve en fazla ilk 6 tanesini al
-      const uniqueUrls = Array.from(new Set(value)).slice(0, 6);
+      // Tekilleştirme ve Sınırlandırma: Aynı URL'leri temizle ve en fazla ilk 10 tanesini al
+      const uniqueUrls = Array.from(new Set(value)).slice(0, 10);
       
       const initialPreviews = uniqueUrls.map(url => ({
         id: crypto.randomUUID(),
@@ -42,8 +42,8 @@ export function ImageDropzone({ onChange, value = [] }: ImageDropzoneProps) {
     
     const newFilesArray = Array.from(incomingFiles).filter((f) => f.type.startsWith("image/"));
     
-    if (previews.length + newFilesArray.length > 6) {
-      toast.error("En fazla 6 fotoğraf ekleyebilirsiniz.");
+    if (previews.length + newFilesArray.length > 10) {
+      toast.error("En fazla 10 fotoğraf ekleyebilirsiniz.");
       return;
     }
 
