@@ -7,7 +7,7 @@ const createProductSchema = z.object({
   description: z.string(),
   price: z.string(),
   sku: z.string(),
-  images: z.array(z.string()).optional(),
+  images: z.array(z.string()).max(100).optional(),
   movement: z.string().optional(),
   case_material: z.string().optional(),
   case_size: z.string().optional(),
@@ -41,8 +41,8 @@ export const getProductsServerFn = async () => {
 };
 
 export const createProductServerFn = async (input: { data: CreateProductInput }) => {
-  const { data } = input;
   try {
+    const data = createProductSchema.parse(input.data);
     const mainImage = data.images && data.images.length > 0 ? data.images[0] : "https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&q=80&w=800";
     
     const { error } = await supabase
@@ -92,8 +92,9 @@ export const updateProductStatusServerFn = async (input: { data: { id: string, s
 };
 
 export const updateProductServerFn = async (input: { data: { id: string, data: CreateProductInput } }) => {
-  const { data: { id, data } } = input;
+  const { data: { id } } = input;
   try {
+    const data = createProductSchema.parse(input.data.data);
     // Get current images to preserve them if no new images uploaded
     const { data: currentProduct } = await supabase
       .from('products')
