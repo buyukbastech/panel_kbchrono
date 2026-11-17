@@ -4,6 +4,7 @@ import { Bell, Search, Plus, Watch, Settings, Share2, Bookmark, MoreHorizontal }
 import { Sidebar, MobileNav } from "@/components/admin/Sidebar";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { ProductList } from "@/components/admin/ProductList";
+import { BulkExcelModal } from "@/components/admin/BulkExcelModal";
 import { UserMenu } from "@/components/admin/UserMenu";
 import { supabase } from "@/lib/supabase";
 import { requireAuth, useInactivityLogout } from "@/lib/auth-guard";
@@ -15,7 +16,7 @@ import {
   DialogDescription,
   DialogClose,
 } from "@/components/ui/dialog";
-import { X, FileSpreadsheet, FileText } from "lucide-react";
+import { X, FileSpreadsheet, FileText, Upload } from "lucide-react";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -43,6 +44,7 @@ function ProductsPage() {
   const { new: isNewFromUrl } = Route.useSearch();
   const navigate = Route.useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
@@ -76,7 +78,8 @@ function ProductsPage() {
         "Boyut": p.case_size,
         "Su Rezistansı": p.water_resistance,
         "Güç Rezervi": p.power_reserve,
-        "Cam": p.crystal
+        "Cam": p.crystal,
+        "Görseller": Array.isArray(p.images) && p.images.length > 0 ? p.images.join(", ") : (p.image || "")
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(data);
@@ -128,7 +131,7 @@ function ProductsPage() {
   useEffect(() => {
     if (isNewFromUrl) {
       setIsModalOpen(true);
-      navigate({ search: (prev) => ({ ...prev, new: false }), replace: true });
+      navigate({ search: (prev: any) => ({ ...prev, new: false }), replace: true });
     }
   }, [isNewFromUrl, navigate]);
 
@@ -204,6 +207,13 @@ function ProductsPage() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-surface-elevated/95 backdrop-blur-xl border-border/40 text-foreground">
                   <DropdownMenuItem 
+                    onClick={() => setIsBulkModalOpen(true)}
+                    className="flex items-center gap-2 py-2.5 cursor-pointer focus:bg-gold/10 focus:text-gold"
+                  >
+                    <Upload className="h-4 w-4" />
+                    <span>Toplu Excel Yükle</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
                     onClick={handleExportXLSX}
                     disabled={isExporting}
                     className="flex items-center gap-2 py-2.5 cursor-pointer focus:bg-gold/10 focus:text-gold"
@@ -223,8 +233,15 @@ function ProductsPage() {
               </DropdownMenu>
               <button
                 type="button"
+                onClick={() => setIsBulkModalOpen(true)}
+                className="ml-1 inline-flex items-center gap-2 rounded-xl border border-gold/30 bg-gold/10 px-4 py-2.5 text-[13px] font-semibold text-gold hover:bg-gold/20 transition-all"
+              >
+                <FileSpreadsheet className="h-4 w-4" strokeWidth={2} /> Toplu Excel Yükle
+              </button>
+              <button
+                type="button"
                 onClick={() => setIsModalOpen(true)}
-                className="ml-2 inline-flex items-center gap-2.5 rounded-xl bg-gradient-gold px-5 py-2.5 text-[14px] font-semibold tracking-tight text-primary-foreground shadow-gold-glow hover:-translate-y-0.5 transition-all"
+                className="ml-1.5 inline-flex items-center gap-2.5 rounded-xl bg-gradient-gold px-5 py-2.5 text-[14px] font-semibold tracking-tight text-primary-foreground shadow-gold-glow hover:-translate-y-0.5 transition-all"
               >
                 <Plus className="h-4 w-4" strokeWidth={2.5} /> Yeni Ürün
               </button>
@@ -240,16 +257,29 @@ function ProductsPage() {
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className="max-w-4xl p-0 bg-transparent border-none shadow-none focus:outline-none [&>button:last-child]:hidden">
             <div className="w-full max-h-[90vh] overflow-y-auto rounded-3xl glass-strong border border-border/40 custom-scrollbar animate-in zoom-in-95 duration-200">
-              <div className="sticky top-0 z-20 p-6 bg-surface/80 backdrop-blur-xl border-b border-border/40 flex items-center justify-between">
+              <div className="sticky top-0 z-20 p-6 bg-surface/80 backdrop-blur-xl border-b border-border/40 flex items-center justify-between gap-4">
                 <div>
                   <DialogTitle className="font-display text-2xl font-semibold">Yeni Ürün Ekle</DialogTitle>
                   <DialogDescription className="text-muted-foreground mt-1 text-[13px]">
-                    Atölyeye yeni bir parça eklemek için aşağıdaki formu doldurun.
+                    Atölyeye yeni bir parça eklemek için aşağıdaki formu doldurun veya toplu Excel ile yükleyin.
                   </DialogDescription>
                 </div>
-                <DialogClose className="h-9 w-9 flex items-center justify-center rounded-full border border-gold/20 bg-gold/10 text-gold hover:bg-gold hover:text-primary-foreground transition-all shadow-gold-glow-soft">
-                  <X className="h-5 w-5" strokeWidth={2.5} />
-                </DialogClose>
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      setIsBulkModalOpen(true);
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl border border-gold/30 bg-gold/10 px-3.5 py-2 text-xs font-semibold text-gold hover:bg-gold/20 transition-all"
+                  >
+                    <FileSpreadsheet className="h-4 w-4" />
+                    <span>Toplu Excel ile Yükle</span>
+                  </button>
+                  <DialogClose className="h-9 w-9 flex items-center justify-center rounded-full border border-gold/20 bg-gold/10 text-gold hover:bg-gold hover:text-primary-foreground transition-all shadow-gold-glow-soft">
+                    <X className="h-5 w-5" strokeWidth={2.5} />
+                  </DialogClose>
+                </div>
               </div>
               <div className="p-8">
                 <ProductForm 
@@ -262,6 +292,14 @@ function ProductsPage() {
             </div>
           </DialogContent>
         </Dialog>
+
+        <BulkExcelModal
+          open={isBulkModalOpen}
+          onOpenChange={setIsBulkModalOpen}
+          onSuccess={() => {
+            setRefreshTrigger((prev) => prev + 1);
+          }}
+        />
       </main>
     </div>
   );
